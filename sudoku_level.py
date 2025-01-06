@@ -8,6 +8,7 @@
 import copy
 import os
 import random
+from matplotlib import pyplot as plt
 from sudoku_main import sudoku
 
 sudoku_board_data = sudoku()
@@ -339,12 +340,12 @@ def check_pos():
 
 def test_sudoku_solver(iterations=1000, gaps=53):
     """Tests the Sudoku solver over a specified number of iterations."""
+    global data_new
     correct = 0
     wrong = 0
 
     for _ in range(iterations):
         data_new_copy = copy.deepcopy(sudoku_board_data)
-        global data_new
         data_new = create_gaps(data_new_copy, gaps)
         remove_pos(data_new)
         solver()
@@ -355,6 +356,32 @@ def test_sudoku_solver(iterations=1000, gaps=53):
             wrong += 1
 
     print(f"Correct: {correct}\nWrong: {wrong}")
+    return correct, wrong
 
-for _ in range(10):
-    test_sudoku_solver(1000, 50)
+# for gaps in range(10, 81):
+#     print(f"\nGaps: {gaps}")
+#     test_sudoku_solver(1000, gaps)
+
+def plot_gaps_to_results():
+    """Plots the number of gaps vs. correct and wrong results."""
+    gaps_range = range(10, 81)
+    correct_results = []
+    wrong_results = []
+
+    for gaps in gaps_range:
+        print(f"\nGaps: {gaps}")
+        correct, wrong = test_sudoku_solver(100, gaps)  # Reduced iterations for faster plotting
+        correct_results.append(correct)
+        wrong_results.append(wrong)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(gaps_range, correct_results, marker='o', linestyle='-', color='green', label='Correct Results')
+    plt.plot(gaps_range, wrong_results, marker='o', linestyle='-', color='red', label='Wrong Results')
+    plt.title('Number of Gaps vs. Results in Sudoku Solver')
+    plt.xlabel('Number of Gaps')
+    plt.ylabel('Number of Results')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+plot_gaps_to_results()
