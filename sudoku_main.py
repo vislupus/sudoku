@@ -49,7 +49,7 @@ def sudoku():
 
             for index in range(81):
                 fill_cell(index)
-            return  # Exit the function if successful
+            return data # Exit the function if successful
 
         except Exception:
             initialize_board()  # Restart the board on error
@@ -154,16 +154,16 @@ def plot_results(times, results):
     plt.show()
 
 
-os.system("cls" if os.name == "nt" else "clear")
+# os.system("cls" if os.name == "nt" else "clear")
 
-# Execution
-start_time = time.process_time()
-sudoku()
-end_time = time.process_time() - start_time
-print(f"\nExecution time: {end_time:.5f} seconds\n")
+# # Execution
+# start_time = time.process_time()
+# sudoku()
+# end_time = time.process_time() - start_time
+# print(f"\nExecution time: {end_time:.5f} seconds\n")
 
-# Draw the Sudoku board
-draw("value")
+# # Draw the Sudoku board
+# draw("value")
 
 # # Check the Sudoku board
 # super_check()
