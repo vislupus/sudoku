@@ -319,18 +319,42 @@ def check_pos():
 #     print("Sudoku could not be fully solved.")
 
 
-correct = 0
-wrong = 0
+# for _ in range(10):
+#     correct = 0
+#     wrong = 0
 
-for _ in range(1000):
-    data_new_copy = copy.deepcopy(sudoku_board_data)
-    data_new = create_gaps(data_new_copy, 50)
-    remove_pos(data_new)
-    solver()
+#     for _ in range(1000):
+#         data_new_copy = copy.deepcopy(sudoku_board_data)
+#         data_new = create_gaps(data_new_copy, 53)
+#         remove_pos(data_new)
+#         solver()
 
-    if not check_pos():
-        correct += 1
-    else:
-        wrong += 1
+#         if not check_pos():
+#             correct += 1
+#         else:
+#             wrong += 1
 
-print(f"Correct: {correct}\nWrong: {wrong}")
+#     print(f"Correct: {correct}\nWrong: {wrong}")
+
+
+def test_sudoku_solver(iterations=1000, gaps=53):
+    """Tests the Sudoku solver over a specified number of iterations."""
+    correct = 0
+    wrong = 0
+
+    for _ in range(iterations):
+        data_new_copy = copy.deepcopy(sudoku_board_data)
+        global data_new
+        data_new = create_gaps(data_new_copy, gaps)
+        remove_pos(data_new)
+        solver()
+
+        if not check_pos():
+            correct += 1
+        else:
+            wrong += 1
+
+    print(f"Correct: {correct}\nWrong: {wrong}")
+
+for _ in range(10):
+    test_sudoku_solver(1000, 50)
