@@ -30,7 +30,7 @@ cd sudoku
 
 ### Import the Class
 ```python
-from sudoku import Sudoku
+from sudoku import Sudoku, SudokuSolver
 ```
 ### Generate a Sudoku Puzzle
 ```python
