@@ -9,7 +9,7 @@ import copy
 import os
 import random
 from matplotlib import pyplot as plt
-from sudoku_main import sudoku
+from sudoku_generate_board import sudoku
 
 sudoku_board_data = sudoku()
 
