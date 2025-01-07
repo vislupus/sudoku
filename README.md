@@ -12,6 +12,8 @@ This project is a Python implementation of a Sudoku generator and solver. It pro
 
 - Customizable Board Visualization: Supports printing the board in different modes (e.g., solution, gaps, or possibilities).
 
+- Custom Board Solving: Allows solving puzzles provided as a 1D list of 81 elements.
+
 ## Installation
 
 1. Clone this repository:
@@ -30,7 +32,7 @@ cd sudoku
 ```python
 from sudoku import Sudoku
 ```
-### Generate and Solve a Sudoku Puzzle
+### Generate a Sudoku Puzzle
 ```python
 # Create a Sudoku instance with 30 gaps
 sudoku = Sudoku(gaps=30)
@@ -52,15 +54,39 @@ board_gaps = sudoku.get_board_gaps(dimension="one")
 # Get the complete solution as a 2D list
 board_solution = sudoku.get_board_solution(dimension="two")
 ```
+### Solving Sudoku Puzzle
+```python
+# Example puzzle with empty cells as 'X'
+puzzle = [
+    5, 3, 'X', 'X', 7, 'X', 'X', 'X', 'X',
+    6, 'X', 'X', 1, 9, 5, 'X', 'X', 'X',
+    'X', 9, 8, 'X', 'X', 'X', 'X', 6, 'X',
+    8, 'X', 'X', 'X', 6, 'X', 'X', 'X', 3,
+    4, 'X', 'X', 8, 'X', 3, 'X', 'X', 1,
+    7, 'X', 'X', 'X', 2, 'X', 'X', 'X', 6,
+    'X', 6, 'X', 'X', 'X', 'X', 2, 8, 'X',
+    'X', 'X', 'X', 4, 1, 9, 'X', 'X', 5,
+    'X', 'X', 'X', 'X', 8, 'X', 'X', 7, 9,
+]
+
+solver = SudokuSolver()
+
+# Solve the puzzle
+solution = solver.solve_sudoku_board(puzzle)
+```
+
 ### Clear the Console
 ```python
 Sudoku.clear_screen()
 ```
+
 ## Class Methods
 
 ### Initialization
 
 - `Sudoku(gaps: int)`: Creates a Sudoku instance with a specified number of gaps.
+
+- `SudokuSolver()`: Creates a SudokuSolver instance.
 
 ### Board Display
 
@@ -85,44 +111,17 @@ Sudoku.clear_screen()
     - `dimension="one"`: 1D list.
 
     - `dimension="two"`: 2D list.
+  
+### Solving Board
+
+- `solve_sudoku_board(puzzle)`: 
+  - **Input**: Accepts a 1D list of 81 elements, where numbers represent filled cells and 'X'  represent empty cells.
+  - **Output**: Returns the complete solution as a 1D list if the puzzle is solvable. If the puzzle doesn't have a unique solution, returns a message indicating this.
+
 
 ### Utility
 
 - `clear_screen()`: Clears the console screen.
-
-## Requirements
-
-Python 3.7+
-
-## Example Output
-
-### Puzzle with Gaps
-
- X   X   X  |  6   5   1  |  X   X   X    
- 7   X   X  |  X   X   8  |  X   X   X    
- X   9   6  |  X   2   4  |  X   X   X    
-— — — — — — + — — — — — — + — — — — — —    
- 9   X   X  |  4   7   X  |  X   X   6    
- 6   X   X  |  9   1   X  |  X   X   X    
- X   7   4  |  X   X   5  |  X   X   X    
-— — — — — — + — — — — — — + — — — — — —    
- X   3   X  |  5   X   X  |  6   X   X    
- X   6   7  |  X   8   9  |  X   3   4    
- X   8   X  |  1   X   6  |  X   X   X    
-
-### Complete Solution
-
- 8   2   3  |  6   5   1  |  7   4   9    
- 7   4   1  |  3   9   8  |  2   6   5    
- 5   9   6  |  7   2   4  |  3   1   8    
-— — — — — — + — — — — — — + — — — — — —    
- 9   1   2  |  4   7   3  |  8   5   6    
- 6   5   8  |  9   1   2  |  4   7   3    
- 3   7   4  |  8   6   5  |  1   9   2    
-— — — — — — + — — — — — — + — — — — — —    
- 2   3   9  |  5   4   7  |  6   8   1    
- 1   6   7  |  2   8   9  |  5   3   4    
- 4   8   5  |  1   3   6  |  9   2   7    
 
 ## License
 
