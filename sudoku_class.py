@@ -1,141 +1,135 @@
-import os
 import random
-import time
 import copy
-
+import os
 
 class Sudoku:
+    def __init__(self, level: str, gaps: int):
+        """
+        Initialize the Sudoku class.
+        
+        Parameters:
+            gaps (int): Number of empty cells (gaps) in the Sudoku board.
+        """
+        self.__board_metadata = {}
+        self.__num_gaps = gaps
+        self.__complete_board = self.__generate_complete_board()
+        self.__board_with_gaps = self.__apply_gaps(self.__complete_board, self.__num_gaps)
+        self.__update_possibilities()
 
-    def __init__(self, gaps: int):
-        self.__board_data = {}
-        self.__gaps = gaps
-        self.__sudoku_board = self.__sudoku_board()
-        self.__sudoku_board_gaps = self.__create_gaps(self.__sudoku_board, self.__gaps)
-        self.__remove_pos()
-
-    def __initialize_board(self):
-        """Initializes an empty Sudoku board with metadata."""
+    def __initialize_metadata(self):
+        """Create metadata for each cell in the Sudoku board."""
         for i in range(81):
-            self.__board_data[i] = {
+            self.__board_metadata[i] = {
                 "index": i,
                 "col": i % 9,
                 "row": i // 9,
                 "value": 0,
                 "box": (i // 9 // 3) * 3 + (i % 9) // 3,
-                "pos": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                "possibilities": [1, 2, 3, 4, 5, 6, 7, 8, 9],
                 "state": "ready",
             }
 
-    def __remove_other(self, row: int, col: int, box: int, number: int):
-        """Removes the possibility of a given number in the row, column, and box."""
+    def __update_constraints(self, row: int, col: int, box: int, number: int):
+        """Update possible values for cells in the same row, column, or box."""
         for i in range(81):
-            if number in self.__board_data[i]["pos"] and (
-                self.__board_data[i]["row"] == row
-                or self.__board_data[i]["col"] == col
-                or self.__board_data[i]["box"] == box
+            if number in self.__board_metadata[i]["possibilities"] and (
+                self.__board_metadata[i]["row"] == row
+                or self.__board_metadata[i]["col"] == col
+                or self.__board_metadata[i]["box"] == box
             ):
-                self.__board_data[i]["pos"].remove(number)
+                self.__board_metadata[i]["possibilities"].remove(number)
 
-    def __remove_pos(self):
-        """Removes invalid possibilities from empty cells based on Sudoku rules."""
-        # Rows
+    def __update_possibilities(self):
+        """Update possible values for empty cells based on Sudoku rules."""
         for i in range(9):
+            # Update rows
             row_start = i * 9
             checked_values = [
-                self.__sudoku_board_gaps[row_start + j]["value"]
+                self.__board_with_gaps[row_start + j]["value"]
                 for j in range(9)
-                if self.__sudoku_board_gaps[row_start + j]["state"] == "checked"
+                if self.__board_with_gaps[row_start + j]["state"] == "checked"
             ]
             for j in range(9):
-                cell = self.__sudoku_board_gaps[row_start + j]
+                cell = self.__board_with_gaps[row_start + j]
                 if cell["state"] == "empty":
-                    cell["pos"] = [p for p in cell["pos"] if p not in checked_values]
+                    cell["possibilities"] = [p for p in cell["possibilities"] if p not in checked_values]
 
-        # Columns
-        for i in range(9):
+            # Update columns
             checked_values = [
-                self.__sudoku_board_gaps[j * 9 + i]["value"]
+                self.__board_with_gaps[j * 9 + i]["value"]
                 for j in range(9)
-                if self.__sudoku_board_gaps[j * 9 + i]["state"] == "checked"
+                if self.__board_with_gaps[j * 9 + i]["state"] == "checked"
             ]
             for j in range(9):
-                cell = self.__sudoku_board_gaps[j * 9 + i]
+                cell = self.__board_with_gaps[j * 9 + i]
                 if cell["state"] == "empty":
-                    cell["pos"] = [p for p in cell["pos"] if p not in checked_values]
+                    cell["possibilities"] = [p for p in cell["possibilities"] if p not in checked_values]
 
-        # Boxes
-        for i in range(9):
+            # Update boxes
             box_start = (i // 3) * 27 + (i % 3) * 3
             box_indices = [box_start + (j // 3) * 9 + (j % 3) for j in range(9)]
             checked_values = [
-                self.__sudoku_board_gaps[idx]["value"]
+                self.__board_with_gaps[idx]["value"]
                 for idx in box_indices
-                if self.__sudoku_board_gaps[idx]["state"] == "checked"
+                if self.__board_with_gaps[idx]["state"] == "checked"
             ]
             for idx in box_indices:
-                cell = self.__sudoku_board_gaps[idx]
+                cell = self.__board_with_gaps[idx]
                 if cell["state"] == "empty":
-                    cell["pos"] = [p for p in cell["pos"] if p not in checked_values]
+                    cell["possibilities"] = [p for p in cell["possibilities"] if p not in checked_values]
 
     def __fill_cell(self, index: int):
-        """Fills a cell with a value if there is only one possibility."""
-        if (
-            len(self.__board_data[index]["pos"]) == 1
-            and self.__board_data[index]["state"] == "ready"
-        ):
-            number = self.__board_data[index]["pos"].pop()
-            self.__board_data[index]["value"] = number
-            self.__board_data[index]["state"] = "checked"
-            self.__remove_other(
-                self.__board_data[index]["row"],
-                self.__board_data[index]["col"],
-                self.__board_data[index]["box"],
-                number,
-            )
+        """Fill a cell if it has only one possible value."""
+        cell = self.__board_metadata[index]
+        if len(cell["possibilities"]) == 1 and cell["state"] == "ready":
+            number = cell["possibilities"].pop()
+            cell["value"] = number
+            cell["state"] = "checked"
+            self.__update_constraints(cell["row"], cell["col"], cell["box"], number)
 
-    def __sudoku_board(self):
-        """Generates a Sudoku board by randomly filling values."""
-        self.__initialize_board()
-        for _ in range(10_000):  # Attempts up to 10 000 times to avoid deadlocks
+    def __generate_complete_board(self):
+        """Generate a complete Sudoku board."""
+        self.__initialize_metadata()
+        for _ in range(10_000):
             try:
                 for index in range(81):
-                    if self.__board_data[index]["state"] == "ready":
-                        number = random.choice(self.__board_data[index]["pos"])
-                        self.__board_data[index]["value"] = number
-                        self.__board_data[index]["state"] = "checked"
-                        self.__remove_other(
-                            self.__board_data[index]["row"],
-                            self.__board_data[index]["col"],
-                            self.__board_data[index]["box"],
+                    if self.__board_metadata[index]["state"] == "ready":
+                        number = random.choice(self.__board_metadata[index]["possibilities"])
+                        self.__board_metadata[index]["value"] = number
+                        self.__board_metadata[index]["state"] = "checked"
+                        self.__update_constraints(
+                            self.__board_metadata[index]["row"],
+                            self.__board_metadata[index]["col"],
+                            self.__board_metadata[index]["box"],
                             number,
                         )
 
                 for index in range(81):
                     self.__fill_cell(index)
-                return self.__board_data  # Exit the function if successful
+                return self.__board_metadata  # Return if successful
 
             except Exception:
-                self.__initialize_board()  # Restart the board on error
+                self.__initialize_metadata()  # Restart on error
         else:
-            raise ValueError("Sudoku generation failed: Maximum attempts reached.")
+            raise ValueError("Sudoku generation failed after maximum attempts.")
 
-    def __create_gaps(self, data, n):
-        """Creates gaps in the Sudoku board by marking cells as empty."""
-        data_new = copy.deepcopy(data)
+    def __apply_gaps(self, board, num_gaps):
+        """Mark a specified number of cells as empty."""
+        board_copy = copy.deepcopy(board)
 
-        while n > 0:
-            indices = random.sample(range(81), k=n)  # Choose n unique cells
+        while num_gaps > 0:
+            indices = random.sample(range(81), k=num_gaps)
             for i in indices:
-                if data_new[i]["state"] != "empty":
-                    data_new[i]["state"] = "empty"
-                    data_new[i]["pos"] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-                    n -= 1
-                    if n == 0:
+                if board_copy[i]["state"] != "empty":
+                    board_copy[i]["state"] = "empty"
+                    board_copy[i]["possibilities"] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                    num_gaps -= 1
+                    if num_gaps == 0:
                         break
-        return data_new
+        return board_copy
 
     def __draw_board(self, attribute, data):
-        """Displays the Sudoku board on the screen with enhanced formatting."""
+        """Print the Sudoku board."""
         output = ""
         for r in range(9):
             row = []
@@ -155,16 +149,14 @@ class Sudoku:
         print(output)
 
     def __draw_possibilities(self, data):
-        """Displays the Sudoku board with possible values for empty cells."""
+        """Display the possible values for empty cells."""
         output = ""
         for r in range(9):
             row = []
             for c in range(9):
                 cell = data[c + 9 * r]
                 if cell["state"] == "empty":
-                    cell_value = str(cell["pos"]).replace(
-                        " ", ""
-                    )  # Remove spaces for compact display
+                    cell_value = str(cell["possibilities"]).replace(" ", "")
                 else:
                     cell_value = "[]"
                 row.append(cell_value.center(9))
@@ -176,46 +168,42 @@ class Sudoku:
 
         print(output)
 
-    def print_board(self, attribute):
-        if attribute == "gaps":
-            self.__draw_board("value", self.__sudoku_board_gaps)
-        elif attribute == "solution":
-            self.__draw_board("value", self.__sudoku_board)
-        elif attribute == "possibilities":
-            self.__draw_possibilities(self.__sudoku_board_gaps)
+    def print_board(self, mode: str):
+        """Print the board based on the mode (gaps, solution, or possibilities)."""
+        if mode == "gaps":
+            self.__draw_board("value", self.__board_with_gaps)
+        elif mode == "solution":
+            self.__draw_board("value", self.__complete_board)
+        elif mode == "possibilities":
+            self.__draw_possibilities(self.__board_with_gaps)
+        else:
+            raise ValueError("Invalid mode. Use 'gaps', 'solution', or 'possibilities'.")
 
-    def board_gaps(self, dimension="one"):
-        lst = ["X" if val['state'] == 'empty' else val['value'] for _, val in self.__sudoku_board_gaps.items()]
-        if dimension == "one" or dimension == "1":
-            return lst
-        if dimension == "two" or dimension == "2" or dimension == "multiple":
-            return [lst[i:i + 9] for i in range(0, len(lst), 9)]
-        
-    def board_solution(self, dimension="one"):
-        lst = [val['value'] for _, val in self.__sudoku_board.items()]
-        if dimension == "one" or dimension == "1":
-            return lst
-        if dimension == "two" or dimension == "2" or dimension == "multiple":
-            return [lst[i:i + 9] for i in range(0, len(lst), 9)]
+    def get_board_gaps(self, dimension="one"):
+        """Return the Sudoku board with gaps in specified dimension (1D or 2D)."""
+        flat_list = [
+            "X" if cell["state"] == "empty" else cell["value"]
+            for cell in self.__board_with_gaps.values()
+        ]
+        if dimension in ("one", "1"):
+            return flat_list
+        elif dimension in ("two", "2", "multiple"):
+            return [flat_list[i : i + 9] for i in range(0, len(flat_list), 9)]
+        else:
+            raise ValueError("Invalid dimension. Use 'one' or 'two'.")
+
+    def get_board_solution(self, dimension="one"):
+        """Return the complete Sudoku solution in specified dimension (1D or 2D)."""
+        flat_list = [cell["value"] for cell in self.__complete_board.values()]
+        if dimension in ("one", "1"):
+            return flat_list
+        elif dimension in ("two", "2", "multiple"):
+            return [flat_list[i : i + 9] for i in range(0, len(flat_list), 9)]
+        else:
+            raise ValueError("Invalid dimension. Use 'one' or 'two'.")
 
     @staticmethod
     def clear_screen():
-        """
-        Clear the console screen.
-
-        Use the "cls" command on Windows and "clear" on Unix/Linux/MacOS.
-        """
+        """Clear the console screen."""
         os.system("cls" if os.name == "nt" else "clear")
 
-
-Sudoku.clear_screen()
-sudoku = Sudoku(50)
-sudoku.print_board("solution")
-# sudoku.print_board("gaps")
-# sudoku.print_board("possibilities")
-# print(sudoku.board_gaps())
-# for row in sudoku.board_gaps("two"):
-#     print(row)
-print(sudoku.board_solution())
-for row in sudoku.board_solution("two"):
-    print(row)
