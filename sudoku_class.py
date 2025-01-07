@@ -622,14 +622,3 @@ class SudokuSolver:
             return [cell["value"] for cell in board_metadata_solution.values()]
         else:
             return "This sudoku doesn't have single solution."
-
-Sudoku.clear_screen()
-sudoku = Sudoku(gaps=30)
-sudoku.print_board(mode="gaps")
-board_gaps = sudoku.get_board_gaps(dimension="one")
-print(board_gaps)
-# board_solution = sudoku.get_board_solution(dimension="one")
-# print(board_solution)
-
-solver = SudokuSolver()
-print(solver.solve_sudoku_board(board_gaps))
